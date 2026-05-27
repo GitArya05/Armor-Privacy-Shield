@@ -1,0 +1,6 @@
+node_modules/
+backend/venv/
+backend/lance_vault/
+backend/__pycache__/
+logs/
+.env
