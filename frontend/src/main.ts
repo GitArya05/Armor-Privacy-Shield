@@ -1,7 +1,16 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
-import path from 'node:path';
-import fs from 'node:fs';
+import path from 'path';
+import fs from 'fs';
 import started from 'electron-squirrel-startup';
+
+// --- CRASH TRAP: Captures silent boot errors and logs them locally ---
+process.on('uncaughtException', (error) => {
+  const logPath = path.join(process.cwd(), 'fatal_crash.log');
+  fs.writeFileSync(logPath, `[FATAL ERROR]\n${error.stack || error.message}`);
+  console.error('🔥 FATAL MAIN PROCESS CRASH 🔥', error);
+  process.exit(1);
+});
+// -------------------------------------------------------------------
 
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string;
 declare const MAIN_WINDOW_VITE_NAME: string;
@@ -14,7 +23,7 @@ if (started) {
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 1200, // Widened to comfortably fit the dashboard layout
+    width: 1200,
     height: 800,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
@@ -58,9 +67,6 @@ app.on('ready', () => {
   });
 });
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
@@ -68,8 +74,6 @@ app.on('window-all-closed', () => {
 });
 
 app.on('activate', () => {
-  // On OS X it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }

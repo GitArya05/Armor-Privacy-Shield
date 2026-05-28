@@ -1,15 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldAlert, WifiOff, UploadCloud, Terminal, Send, Flame } from 'lucide-react';
-import { uploadSecureFile, askLocalEngine, wipeLocalData } from './services/api';
-
-// Explicitly type the secure Electron bridge to satisfy TypeScript
-declare global {
-  interface Window {
-    electronAPI?: {
-      getPrivacyLogs: () => Promise<string>;
-    };
-  }
-}
+import { ShieldAlert, WifiOff, UploadCloud, Terminal, Send, Flame, CheckCircle } from 'lucide-react';
+import { uploadSecureFile, wipeLocalData } from './services/api';
 
 const PrivacyHubDashboard = () => {
   const [query, setQuery] = useState('');
@@ -17,16 +8,28 @@ const PrivacyHubDashboard = () => {
   const [logs, setLogs] = useState<string[]>(['[SYSTEM] Local Engine Standby...']);
   const [isUploading, setIsUploading] = useState(false);
   const [isInferencing, setIsInferencing] = useState(false);
+  
+  // NEW: Tracks the currently loaded file to give visual feedback
+  const [activeFile, setActiveFile] = useState<string | null>(null);
 
-  // Poll for local privacy logs via Electron IPC
+  // UPGRADE: Poll for local privacy logs via reliable HTTP Endpoint
   useEffect(() => {
     const fetchLogs = async () => {
-      if (window.electronAPI) {
-        const newLogs = await window.electronAPI.getPrivacyLogs();
-        if (newLogs) setLogs(newLogs.split('\n').slice(-10)); // Keep last 10 lines
+      try {
+        const res = await fetch("http://127.0.0.1:8000/api/v1/logs");
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data.logs) {
+          const lines = data.logs.split('\n').filter((line: string) => line.trim() !== '');
+          setLogs(lines.length > 0 ? lines : ['[SYSTEM] Local Engine Standby...']);
+        }
+      } catch (error) {
+        // Fail silently so the UI doesn't flicker if server restarts
       }
     };
-    const interval = setInterval(fetchLogs, 2000);
+    
+    // Poll every 1.5 seconds for a snappy terminal feel
+    const interval = setInterval(fetchLogs, 1500);
     return () => clearInterval(interval);
   }, []);
 
@@ -35,43 +38,75 @@ const PrivacyHubDashboard = () => {
     if (!file) return;
 
     setIsUploading(true);
-    setLogs(prev => [...prev, `[LOCAL] Ingesting ${file.name}...`]);
     
     try {
       await uploadSecureFile(file);
-      setLogs(prev => [...prev, `[SUCCESS] Vector embeddings frozen.`]);
+      // Set the active file so the UI changes to "Locked & Loaded"
+      setActiveFile(file.name);
     } catch (error) {
-      setLogs(prev => [...prev, `[ERROR] Ingestion failed.`]);
+      alert("Ingestion failed. Please check the backend terminal for details.");
+    } finally {
+      setIsUploading(false);
     }
-    setIsUploading(false);
   };
 
+  // UPGRADE: High-Speed Token Streaming 
   const handleAsk = async () => {
-    if (!query.trim() || isInferencing) return; // Prevent double firing
+    if (!query.trim() || isInferencing) return;
     
     const userMsg = query;
     setQuery('');
-    setChatHistory(prev => [...prev, { role: 'user', content: userMsg }]);
-    setIsInferencing(true); // Lock the UI during inference
+    
+    // Inject a blank placeholder for the Llama text to stream into
+    setChatHistory(prev => [...prev, { role: 'user', content: userMsg }, { role: 'llama', content: '' }]);
+    setIsInferencing(true); 
     
     try {
-      const res = await askLocalEngine(userMsg);
-      setChatHistory(prev => [...prev, { role: 'llama', content: res.reply }]);
+      const response = await fetch("http://127.0.0.1:8000/api/v1/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: userMsg }),
+      });
+
+      if (!response.body) throw new Error("No stream body");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let aiText = "";
+
+      // Read the stream chunk by chunk as Ollama generates it
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        
+        aiText += decoder.decode(value, { stream: true });
+
+        // Update just the last message in the chat history
+        setChatHistory(prev => {
+          const newHistory = [...prev];
+          newHistory[newHistory.length - 1].content = aiText;
+          return newHistory;
+        });
+      }
     } catch (error) {
-      setChatHistory(prev => [...prev, { role: 'system', content: 'Connection to local silo lost.' }]);
+      setChatHistory(prev => {
+        const newHistory = [...prev];
+        newHistory[newHistory.length - 1] = { role: 'system', content: '[ERROR] Connection to local silo lost.' };
+        return newHistory;
+      });
     } finally {
-      setIsInferencing(false); // Unlock the UI
+      setIsInferencing(false); 
     }
   };
 
   const handleWipe = async () => {
-    if(window.confirm("WARNING: This will permanently destroy your local vector database and audit logs. Proceed?")) {
+    if(window.confirm("CRITICAL WARNING: This will permanently destroy your local vector database and audit logs. Proceed?")) {
       try {
         await wipeLocalData();
-        setLogs(['[SYSTEM] Memory wiped. Commencing fresh silo log.']);
-        setChatHistory([]);
+        setActiveFile(null); // Clear the active file UI
+        setChatHistory([]);  // Clear the chat UI
       } catch (error) {
-        setLogs(prev => [...prev, `[ERROR] Failed to execute wipe protocol.`]);
+        alert("Failed to execute wipe protocol.");
       }
     }
   };
@@ -94,11 +129,22 @@ const PrivacyHubDashboard = () => {
         </div>
 
         {/* Data Ingestion Zone */}
-        <div className="bg-gray-800 p-6 rounded-lg border border-gray-700 text-center flex flex-col items-center justify-center h-48 transition hover:border-gray-500">
-          <UploadCloud className="text-gray-400 mb-3" size={32} />
-          <p className="text-sm text-gray-300 mb-4">Drop Medical PDFs or Financial CSVs</p>
+        <div className={`p-6 rounded-lg border text-center flex flex-col items-center justify-center h-48 transition ${activeFile ? 'bg-green-900/20 border-green-700/50' : 'bg-gray-800 border-gray-700 hover:border-gray-500'}`}>
+          {activeFile ? (
+            <>
+              <CheckCircle className="text-green-400 mb-3" size={32} />
+              <p className="text-sm text-green-400 mb-4 font-mono font-bold">🔒 Locked & Loaded:</p>
+              <p className="text-xs text-gray-300 mb-4 truncate w-full px-4">{activeFile}</p>
+            </>
+          ) : (
+            <>
+              <UploadCloud className="text-gray-400 mb-3" size={32} />
+              <p className="text-sm text-gray-300 mb-4">Drop Medical PDFs or Financial CSVs</p>
+            </>
+          )}
+          
           <label className={`px-4 py-2 rounded cursor-pointer text-sm font-medium transition ${isUploading ? 'bg-gray-600 text-gray-400' : 'bg-blue-600 hover:bg-blue-700'}`}>
-            {isUploading ? "Encrypting..." : "Select Local File"}
+            {isUploading ? "Encrypting..." : (activeFile ? "Replace File" : "Select Local File")}
             <input type="file" className="hidden" accept=".pdf,.csv" onChange={handleFileUpload} disabled={isUploading} />
           </label>
         </div>
