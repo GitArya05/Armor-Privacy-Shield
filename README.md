@@ -6,35 +6,36 @@ This system was explicitly designed, built, and audited to fulfill the core secu
 
 ---
 
-##  Integrated Core Tech Stack
+## 🏗️ Integrated Core Tech Stack
 
 Our decentralized architecture removes third-party cloud infrastructure entirely, binding all data engineering, vector indexing, and model inference operations directly to local machine components:
 
-*   **Host Shell Platform:** Electron.js (Provides a strictly sandboxed native desktop container environment).
-*   **Asset Bundling Pipeline:** Vite & TypeScript (Optimizes module compilation and triggers asset hot-reloading).
-*   **User Interface Interface:** React 19 (Modern slate/emerald theme featuring hardware-accelerated CSS animations).
-*   **Vector Database Engine:** LanceDB (Local-first, disk-backed, zero-latency vector table indexing).
-*   **Data Partitioning Utility:** Unstructured.io (Local extraction layer for multi-format CSV and unstructured PDF data streams).
-*   **Local LLM Ingestion Layer:** Llama Stack & Ollama Service Container.
-*   **Localized Reasoning Engine:** Llama 3.2 3B Quantized Model (Highly optimized for high tokens-per-second inference on standard consumer laptops).
+* **Host Shell Platform:** Electron.js (Provides a strictly sandboxed native desktop container environment).
+* **User Interface:** React 19 + Vite + Tailwind CSS (Modern slate/emerald theme).
+* **Vector Database Engine:** LanceDB (Local-first, disk-backed, zero-latency vector table indexing).
+* **Data Partitioning & Embedding:** Unstructured.io & `sentence-transformers` (Local extraction and explicit 384-dimensional vector generation).
+* **Local LLM Engine:** Ollama Service Container running the **Llama 3.2 (3B)** quantized model.
+* **Inference Pipeline:** FastAPI via Python (Implementing zero-latency Server-Sent Events (SSE) token streaming, conversational memory, and a strict 0.0-temperature factual prompt layer).
 
 ---
 
-##  Architecture Blueprint
+## 🗺️ Architecture Blueprint
 
 ```text
 ARMOR/
-├── package.json         # Unified dependency and module build routing
-├── vite.config.ts       # Vite build compilation layout
-├── index.html           # Document root entry
-├── src/                 # Application container
-│   ├── main.ts          # Core Electron window lifecycle system
-│   ├── preload.ts       # Sandboxed local security context bridge
-│   ├── renderer.tsx     # React rendering target wrapper
-│   └── Dashboard.tsx    # Responsive analytics dashboard interface
-└── backend/             # Offline data processing environment
-    ├── main.py          # FastAPI application server and database routes
-    └── lancedb_vault/   # Isolated physical vector storage location
+├── package.json                     # Unified dependency and module build routing
+├── frontend/                        # Application frontend container
+│   ├── index.html                   # Document root entry with strict Content-Security-Policy
+│   ├── src/               
+│   │   ├── main.ts                  # Core Electron main process & crash trap
+│   │   ├── preload.ts               # Sandboxed local security context bridge
+│   │   ├── renderer.tsx             # React rendering target wrapper
+│   │   └── PrivacyHubDashboard.tsx  # Responsive RAG analytics interface
+└── backend/                         # Offline data processing environment
+    ├── processor.py                 # FastAPI server, LanceDB vector logic, and SSE streaming
+    ├── lance_vault/                 # Isolated physical vector storage location (Generated)
+    ├── temp_data/                   # Volatile memory for Unstructured parsing
+    └── logs/                        # Localized privacy audit logs
 
 ```
 
@@ -51,27 +52,25 @@ Follow these setup phases to deploy the entire secure architecture locally on yo
 ### Step 1: Clone and Configure the Application Repository
 Open your terminal and navigate to your chosen project workspace directory:
 ```bash
-git clone <your-github-repo-url>
-cd ARMOR
+git clone https://github.com/GitArya05/Armor-Privacy-Shield.git
+cd Armor-Privacy-Shield/frontend
 npm install
 ```
 
 ### Step 2: Set Up the Isolated Python Environment
-Initialize the local Python virtual environment inside the backend directory to isolate your data science packages:
+Initialize the local Python virtual environment inside the backend directory to isolate data science packages:
 ```bash
-cd backend
-python3 -m venv venv
+cd ../backend
+python -m venv venv
 
-# Activation Command:
-# For macOS/Linux:
-source venv/bin/activate
+# Activate the environment:
 # For Windows (PowerShell):
 .\venv\Scripts\activate
+# For macOS/Linux:
+source venv/bin/activate
 
-# Upgrade package utilities and install core libraries
-pip install --upgrade pip
-pip install fastapi uvicorn lancedb pydantic requests "unstructured[pdf]"
-cd ..
+# Install core local-processing libraries
+pip install fastapi uvicorn lancedb pydantic "unstructured[pdf]" sentence-transformers pandas openai
 ```
 ### Step 3: Initialize the Local Llama Intelligence Core
 Ensure the Ollama background service is running on your local machine, then execute the following command in a separate terminal window to download and containerize the designated reasoning model manifest directly onto your local storage:
