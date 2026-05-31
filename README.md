@@ -104,7 +104,7 @@ Ensure your virtual environment is active before starting the local server threa
 *   **Step 3:** Launch the ASGI server runner with automatic code reload enabled:
 ```bash
     uvicorn main:app --reload
-    ```
+    ``
 
 *The local API microservice container will bind securely to `http://127.0.0.1:8000`. You can verify active endpoint mapping routes by visiting `http://127.0.0.1:8000/docs` in your browser.*
 
