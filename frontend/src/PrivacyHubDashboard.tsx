@@ -8,11 +8,8 @@ const PrivacyHubDashboard = () => {
   const [logs, setLogs] = useState<string[]>(['[SYSTEM] Local Engine Standby...']);
   const [isUploading, setIsUploading] = useState(false);
   const [isInferencing, setIsInferencing] = useState(false);
-  
-  // NEW: Tracks the currently loaded file to give visual feedback
   const [activeFile, setActiveFile] = useState<string | null>(null);
 
-  // UPGRADE: Poll for local privacy logs via reliable HTTP Endpoint
   useEffect(() => {
     const fetchLogs = async () => {
       try {
@@ -24,11 +21,10 @@ const PrivacyHubDashboard = () => {
           setLogs(lines.length > 0 ? lines : ['[SYSTEM] Local Engine Standby...']);
         }
       } catch (error) {
-        // Fail silently so the UI doesn't flicker if server restarts
+        // Fail silently
       }
     };
     
-    // Poll every 1.5 seconds for a snappy terminal feel
     const interval = setInterval(fetchLogs, 1500);
     return () => clearInterval(interval);
   }, []);
@@ -41,7 +37,6 @@ const PrivacyHubDashboard = () => {
     
     try {
       await uploadSecureFile(file);
-      // Set the active file so the UI changes to "Locked & Loaded"
       setActiveFile(file.name);
     } catch (error) {
       alert("Ingestion failed. Please check the backend terminal for details.");
@@ -50,22 +45,26 @@ const PrivacyHubDashboard = () => {
     }
   };
 
-  // UPGRADE: High-Speed Token Streaming 
   const handleAsk = async () => {
     if (!query.trim() || isInferencing) return;
     
     const userMsg = query;
     setQuery('');
     
-    // Inject a blank placeholder for the Llama text to stream into
+    // UPGRADE: Package the existing history (excluding system errors) before modifying state
+    const historyPayload = chatHistory
+      .filter(msg => msg.role !== 'system')
+      .map(msg => ({ role: msg.role, content: msg.content }));
+    
     setChatHistory(prev => [...prev, { role: 'user', content: userMsg }, { role: 'llama', content: '' }]);
     setIsInferencing(true); 
     
     try {
+      // UPGRADE: Transmit the query and the cognitive context
       const response = await fetch("http://127.0.0.1:8000/api/v1/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: userMsg }),
+        body: JSON.stringify({ query: userMsg, history: historyPayload }),
       });
 
       if (!response.body) throw new Error("No stream body");
@@ -74,14 +73,12 @@ const PrivacyHubDashboard = () => {
       const decoder = new TextDecoder("utf-8");
       let aiText = "";
 
-      // Read the stream chunk by chunk as Ollama generates it
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         
         aiText += decoder.decode(value, { stream: true });
 
-        // Update just the last message in the chat history
         setChatHistory(prev => {
           const newHistory = [...prev];
           newHistory[newHistory.length - 1].content = aiText;
@@ -103,8 +100,8 @@ const PrivacyHubDashboard = () => {
     if(window.confirm("CRITICAL WARNING: This will permanently destroy your local vector database and audit logs. Proceed?")) {
       try {
         await wipeLocalData();
-        setActiveFile(null); // Clear the active file UI
-        setChatHistory([]);  // Clear the chat UI
+        setActiveFile(null); 
+        setChatHistory([]);  
       } catch (error) {
         alert("Failed to execute wipe protocol.");
       }

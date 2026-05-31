@@ -3,6 +3,7 @@ import datetime
 import shutil
 import pandas as pd
 import lancedb
+from typing import List
 from sentence_transformers import SentenceTransformer
 from openai import OpenAI
 from unstructured.partition.pdf import partition_pdf
@@ -31,7 +32,6 @@ app.add_middleware(
 client = OpenAI(base_url=OLLAMA_API_URL, api_key="local-silo")
 db = lancedb.connect(DB_DIR)
 
-# EXPLICIT MODEL: Bypassing LanceDB's buggy Pydantic wrappers completely
 print("[SYSTEM] Loading embedding model into RAM. Please wait...")
 embed_model = SentenceTransformer("all-MiniLM-L6-v2")
 print("[SYSTEM] Embedding model loaded successfully.")
@@ -46,7 +46,6 @@ def log_privacy_event(action: str):
 
 class PrivacyProcessor:
     def __init__(self):
-        # RENAMED: This instantly bypasses any old, broken ghost files on your Windows drive
         self.table_name = "secure_vault_v3"
         log_privacy_event("Local Intelligence Engine Initialized securely.")
 
@@ -72,11 +71,9 @@ class PrivacyProcessor:
         if not chunks:
             raise Exception("No readable text found in the document.")
 
-        # EXPLICIT VECTORIZATION: We calculate them manually, ensuring no schema errors
         log_privacy_event("Generating 384-dimensional vectors explicitly...")
         vectors = embed_model.encode(chunks)
         
-        # Build the exact, raw data structure LanceDB needs natively
         data = [
             {
                 "vector": vectors[i].tolist(), 
@@ -95,40 +92,46 @@ class PrivacyProcessor:
         log_privacy_event("Data embedded and frozen into local LanceDB vector vault.")
         return "Success"
 
-    def ask_llama_stream(self, user_query: str):
+    def ask_llama_stream(self, user_query: str, chat_history: list):
         if self.table_name not in db.table_names():
             yield "Please ingest a secure data file first."
             return
             
         table = db.open_table(self.table_name)
         
-        # EXPLICIT QUERY VECTORIZATION
+        # Explicit Vectorization
         query_vector = embed_model.encode([user_query])[0].tolist()
         
-        # UPGRADE: Limit to 2 chunks to prevent AI confusion and noise
+        # Speed Optimization: Limit to 2 results to keep prompt payload lean and fast
         results = table.search(query_vector).limit(2).to_pandas()
         context = "\n".join(results["text"].tolist())
         
         log_privacy_event("Vector semantic search executed inside localized bounds.")
         log_privacy_event("Streaming zero-latency inference pipeline engaged.")
 
-        # UPGRADE: Militant strictness to force exact answers
         system_logic = (
             "You are a highly secure, strict data extraction AI. "
             "RULES:\n"
-            "1. ONLY answer based on the provided Context data.\n"
-            "2. If the answer is NOT in the context, reply EXACTLY with: 'Data not found in local vault.'\n"
+            "1. Answer based ONLY on the provided Context data or previous conversation history.\n"
+            "2. If the answer cannot be found or deduced, reply EXACTLY with: 'Data not found in local vault.'\n"
             "3. DO NOT assume, guess, or bring in outside knowledge.\n"
-            "4. Be brutally concise. Give the exact number, verdict, or decision immediately without filler words."
+            "4. Be brutally concise. Give the exact number, verdict, or formatted table immediately."
         )
 
-        # UPGRADE: Temperature 0.0 + Stream True
+        # Enterprise Logic: Constructing the cognitive payload
+        messages = [{"role": "system", "content": system_logic}]
+        
+        # Map previous frontend history to strict API roles (truncate to last 4 messages for speed)
+        for msg in chat_history[-4:]:
+            role = "assistant" if msg.role == "llama" else "user"
+            messages.append({"role": role, "content": msg.content})
+
+        # Append the final query with the heavy context data attached
+        messages.append({"role": "user", "content": f"Context data:\n{context}\n\nCurrent Request: {user_query}"})
+
         response = client.chat.completions.create(
             model="llama3.2:3b", 
-            messages=[
-                {"role": "system", "content": system_logic},
-                {"role": "user", "content": f"Context data:\n{context}\n\nQuestion: {user_query}"}
-            ],
+            messages=messages,
             temperature=0.0,
             stream=True
         )
@@ -139,8 +142,14 @@ class PrivacyProcessor:
 
 processor = PrivacyProcessor()
 
+# UPGRADE: Added history parameter to the request model
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
 class QueryRequest(BaseModel):
     query: str
+    history: List[ChatMessage] = []
 
 @app.post("/api/v1/upload")
 async def upload_document(file: UploadFile = File(...)):
@@ -169,13 +178,15 @@ async def upload_document(file: UploadFile = File(...)):
 @app.post("/api/v1/chat")
 async def chat_with_llama(request: QueryRequest):
     try:
-        # UPGRADE: Connects UI to the live token generator
-        return StreamingResponse(processor.ask_llama_stream(request.query), media_type="text/event-stream")
+        # Pass both query and history into the pipeline
+        return StreamingResponse(
+            processor.ask_llama_stream(request.query, request.history), 
+            media_type="text/event-stream"
+        )
     except Exception as e:
         print(f"[ERROR] Inference failed: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# UPGRADE: Dedicated log endpoint that bypasses Electron IPC issues
 @app.get("/api/v1/logs")
 async def get_system_logs():
     try:
@@ -202,10 +213,7 @@ async def wipe_secure_silo():
             pass
             
     log_privacy_event("CRITICAL: User initiated Zero-Knowledge Wipe. All local vectors and history destroyed.")
-    
-    # Dynamically increment table name to guarantee a fresh start, bypassing Windows locks entirely
     processor.table_name = f"secure_vault_{int(datetime.datetime.now().timestamp())}"
-    
     return {"status": "Silo Destroyed"}
 
 if __name__ == "__main__":
