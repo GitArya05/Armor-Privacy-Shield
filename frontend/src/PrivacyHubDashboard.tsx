@@ -10,6 +10,9 @@ const PrivacyHubDashboard = () => {
   const [isInferencing, setIsInferencing] = useState(false);
   const [activeFile, setActiveFile] = useState<string | null>(null);
 
+  // NEW: Telemetry state for live inference speed
+  const [tps, setTps] = useState(0);
+
   // --- NEW: Auto-Scroll Anchor & Logic ---
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -73,7 +76,6 @@ const PrivacyHubDashboard = () => {
     setIsInferencing(true); 
     
     try {
-      // UPGRADE: Transmit the query and the cognitive context
       const response = await fetch("http://127.0.0.1:8000/api/v1/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -86,11 +88,25 @@ const PrivacyHubDashboard = () => {
       const decoder = new TextDecoder("utf-8");
       let aiText = "";
 
-      while (true) {
+      // --- NEW: Telemetry Tracking ---
+      setTps(0); // Reset the meter for the new prompt
+      const startTime = Date.now();
+      let tokenCount = 0;
+
+      // eslint-disable-next-line no-constant-condition
+       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         
         aiText += decoder.decode(value, { stream: true });
+        tokenCount++; // Each chunk from the stream is roughly one token
+
+        // Calculate rolling TPS
+        const elapsedSeconds = (Date.now() - startTime) / 1000;
+        if (elapsedSeconds > 0) {
+          setTps(Math.round(tokenCount / elapsedSeconds));
+        }
+        // -------------------------------
 
         setChatHistory(prev => {
           const newHistory = [...prev];
@@ -127,14 +143,17 @@ const PrivacyHubDashboard = () => {
       {/* LEFT PANEL: Security & Ingestion */}
       <div className="w-1/3 p-6 border-r border-gray-700 flex flex-col gap-6">
         
-        {/* Air-Gap Status Indicator */}
+      {/* Air-Gap Status Indicator */}
         <div className="bg-gray-800 p-4 rounded-lg border border-green-500/30 flex items-center gap-4 shadow-lg shadow-green-900/10">
           <div className="p-3 bg-green-500/10 rounded-full">
             <WifiOff className="text-green-400" size={24} />
           </div>
           <div>
             <h2 className="text-lg font-bold text-green-400">Air-Gapped Mode</h2>
-            <p className="text-xs text-gray-400">0 KB/s Outgoing Traffic</p>
+            {/* NEW: Live Telemetry output */}
+            <p className="text-xs font-mono text-gray-400">
+              Outbound: 0 KB/s | Inference: <span className="text-blue-400">{tps} TPS</span>
+            </p>
           </div>
         </div>
 
