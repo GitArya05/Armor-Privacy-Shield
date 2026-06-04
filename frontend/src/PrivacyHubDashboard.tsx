@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ShieldAlert, WifiOff, UploadCloud, Terminal, Send, Flame, CheckCircle } from 'lucide-react';
 import { uploadSecureFile, wipeLocalData } from './services/api';
 
@@ -9,6 +9,19 @@ const PrivacyHubDashboard = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [isInferencing, setIsInferencing] = useState(false);
   const [activeFile, setActiveFile] = useState<string | null>(null);
+
+  // --- NEW: Auto-Scroll Anchor & Logic ---
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Trigger the scroll every time a new word streams into chatHistory
+  useEffect(() => {
+    scrollToBottom();
+  }, [chatHistory]);
+  // ---------------------------------------
 
   useEffect(() => {
     const fetchLogs = async () => {
@@ -197,6 +210,8 @@ const PrivacyHubDashboard = () => {
               </div>
             ))
           )}
+          {/* NEW: The invisible anchor that the useEffect pulls down to */}
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Input Area */}
