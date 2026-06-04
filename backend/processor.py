@@ -120,22 +120,30 @@ class PrivacyProcessor:
             "4. If the required information is completely absent from the context, output EXACTLY: 'Data not found in local vault.'"
         )
 
-        # Enterprise Logic: Constructing the cognitive payload
+      # --- ENTERPRISE KV CACHING & THREAD OPTIMIZATION ---
+        
+        # 1. Static Core System Prompt (Always caches)
         messages = [{"role": "system", "content": system_logic}]
         
-        # Map previous frontend history to strict API roles (truncate to last 4 messages for speed)
+        # 2. Static Context Injection (Anchored at the top so it caches if context doesn't change)
+        messages.append({"role": "system", "content": f"Context data:\n{context}"})
+        
+        # 3. Chat History (Truncated to last 4 for speed)
         for msg in chat_history[-4:]:
             role = "assistant" if msg.role == "llama" else "user"
             messages.append({"role": role, "content": msg.content})
 
-        # Append the final query with the heavy context data attached
-        messages.append({"role": "user", "content": f"Context data:\n{context}\n\nCurrent Request: {user_query}"})
+        # 4. Clean User Query (No massive text blocks attached to the bottom)
+        messages.append({"role": "user", "content": user_query})
 
+        # 5. Hardware-Locked Inference Execution
         response = client.chat.completions.create(
             model="llama3.2:3b", 
             messages=messages,
             temperature=0.0,
-            stream=True
+            stream=True,
+            # Explicit hardware thread lock to prevent OS scheduler thrashing
+            extra_body={"options": {"num_thread": 8}} 
         )
         
         for chunk in response:
