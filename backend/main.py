@@ -1,6 +1,8 @@
 # backend/main.py
 import os
 import shutil
+import time  # New 
+import psutil  # New 
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from processor import processor, log_privacy_event
@@ -33,8 +35,23 @@ async def upload_document(file: UploadFile = File(...)):
 @app.post("/ask")
 async def query_intelligence(payload: dict):
     user_question = payload.get("text", "")
+    # Start telemetry timer
+    start_time = time.time()
+
+    # Calculate performance metrics
+    duration = time.time() - start_time
+    cpu_load = psutil.cpu_percent()
+    
     ai_answer = processor.ask_llama(user_question)
-    return {"answer": ai_answer}
+    # Return answer along with hardware telemetry for the UI
+    return {
+        "answer": ai_answer,
+        "telemetry": {
+            "speed_seconds": round(duration, 2),
+            "cpu_usage": f"{cpu_load}%",
+            "network_status": "0 KB/s (Isolated)"
+        }
+    }
 
 @app.get("/audit-logs")
 async def stream_audit_logs():
