@@ -130,7 +130,7 @@ class PrivacyProcessor:
         # 2. Static Context Injection (Anchored at the top so it caches if context doesn't change)
         messages.append({"role": "system", "content": f"Context data:\n{context}"})
         
-        # 3. Chat History (Truncated to last 4 for speed)
+       # 3. Chat History (Safely handling structured Pydantic object elements)
         for msg in chat_history[-4:]:
             role = "assistant" if msg.role == "llama" else "user"
             messages.append({"role": role, "content": msg.content})
