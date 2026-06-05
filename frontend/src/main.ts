@@ -7,7 +7,7 @@ import started from 'electron-squirrel-startup';
 process.on('uncaughtException', (error) => {
   const logPath = path.join(process.cwd(), 'fatal_crash.log');
   fs.writeFileSync(logPath, `[FATAL ERROR]\n${error.stack || error.message}`);
-  console.error('🔥 FATAL MAIN PROCESS CRASH 🔥', error);
+  console.error(' FATAL MAIN PROCESS CRASH ', error);
   process.exit(1);
 });
 // -------------------------------------------------------------------
