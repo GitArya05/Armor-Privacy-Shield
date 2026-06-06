@@ -38,7 +38,6 @@ ARMOR/
     └── logs/                        # Localized privacy audit logs
 
 ```
-
 ## Step-by-Step Installation & Setup
 
 Follow these setup phases to deploy the entire secure architecture locally on your hardware.
@@ -54,20 +53,16 @@ Follow these setup phases to deploy the entire secure architecture locally on yo
 Open your terminal and navigate to your chosen project workspace directory:
 
 ```bash
-git clone https://github.com/GitArya05/Armor-Privacy-Shield.git
+git clone [https://github.com/GitArya05/Armor-Privacy-Shield.git](https://github.com/GitArya05/Armor-Privacy-Shield.git)
 cd Armor-Privacy-Shield/frontend
 npm install
 ```
 
+
 ### Step 2: Set Up the Isolated Python Environment
 
-<<<<<<< HEAD
 Initialize the local Python virtual environment inside the backend directory to isolate data science packages:
-=======
 
-Initialize the local Python virtual environment inside the backend directory to isolate your data science packages:
-
-> > > > > > > b2eeeb2 (docs: finalize enterprise README, architecture blueprint, and setup instructions)
 
 ```bash
 cd ../backend
@@ -105,20 +100,22 @@ Ensure your virtual environment is active before starting the local server threa
 
 ````bash
     cd backend
+````
 
 *   **Step 2:** Activate your isolated virtual environment container:
-    *   *For macOS/Linux:*
+*   *For macOS/Linux:*
 ```bash
         source venv/bin/activate
-        ```
-    *   *For Windows (PowerShell):*
+```
+
+*   *For Windows (PowerShell):*
 ```powershell
         .\venv\Scripts\activate
-        ```
+```
 *   **Step 3:** Launch the ASGI server runner with automatic code reload enabled:
 ```bash
     uvicorn main:app --reload
-    ``
+```
 
 *The local API microservice container will bind securely to `http://127.0.0.1:8000`. You can verify active endpoint mapping routes by visiting `http://127.0.0.1:8000/docs` in your browser.*
 
@@ -130,38 +127,37 @@ Open a completely separate terminal pane pointing directly to the root project w
 *   **Step 1:** Open a new terminal window or pane and ensure you are sitting at the root workspace folder:
 ```bash
     cd ..
-    ```
+````
 *   **Step 2:** Execute the integrated startup script sequence:
 ```bash
     npm start
-    ```
+````
 
 *Vite will instantly bundle your modern TypeScript components and layout files into production static targets. The native standalone **Privacy Shield Hub** desktop frame will snap open automatically over your screen, immediately establishing its sandboxed security bridge with your active Python backend node.*
 
-````
+`````
+`````
 
 ## Track Validation Checklist
-
 To confirm the application meets all the evaluation metrics specified in **Track 3 | The Privacy Shield**:
 
 ### 1. Total Data Sovereignty (40% Weight)
-
-- **Air-Gap Isolation:** Toggle your machine's Wi-Fi network interface completely OFF or unplug your Ethernet cable.
-- **Security Context Bridge:** Verify that the status badge at the top right of the application interface automatically updates to reflect **"AIR-GAP STATUS: SECURE"** using the sandboxed preload bridge.
-- **Zero-Leakage Guarantee:** Confirm that the entire analytical pipeline functions flawlessly with zero internet connectivity, ensuring no outbound data packets leave the local device container.
+* **Air-Gap Isolation:** Toggle your machine's Wi-Fi network interface completely OFF or unplug your Ethernet cable.
+* **Security Context Bridge:** Verify that the status badge at the top right of the application interface automatically updates to reflect **"AIR-GAP STATUS: SECURE"** using the sandboxed preload bridge.
+* **Zero-Leakage Guarantee:** Confirm that the entire analytical pipeline functions flawlessly with zero internet connectivity, ensuring no outbound data packets leave the local device container.
 
 ### 2. Document Pipeline Ingestion
-
-- **Local File Ingestion:** Upload an anonymized financial transaction ledger (`.csv`) or a comprehensive lab diagnostic summary (`.pdf`) into the drag-and-drop vault interface.
-- **Offline Document Splitting:** Verify via your FastAPI console logs that the local data state manager successfully processes and partitions the file using `Unstructured.io`.
-- **Vector Engine Commit:** Confirm that the extracted document contents are immediately indexed and written silently into your physical, disk-backed local `LanceDB` storage collection.
+* **Local File Ingestion:** Upload an anonymized financial transaction ledger (`.csv`) or a comprehensive lab diagnostic summary (`.pdf`) into the drag-and-drop vault interface.
+* **Offline Document Splitting:** Verify via your FastAPI console logs that the local data state manager successfully processes and partitions the file using `Unstructured.io`.
+* **Vector Engine Commit:** Confirm that the extracted document contents are immediately indexed and written silently into your physical, disk-backed local `LanceDB` storage collection.
 
 ### 3. Insight Depth Reasoning (30% Weight)
-
-- **Contextual RAG Execution:** Submit a complex analysis request, such as identifying hidden subscription cost leakage, detecting silent price hikes across financial cycles, or interpreting physiological trend markers over time.
-- **Advanced Local Inference:** Verify that the local engine executes a deep context look-up across your database tables, injecting the file text directly into your local **Llama 3.2 3B** prompt template to deliver tailored reasoning rather than basic keyword matching.
+* **Contextual RAG Execution:** Submit a complex analysis request, such as identifying hidden subscription cost leakage, detecting silent price hikes across financial cycles, or interpreting physiological trend markers over time.
+* **Advanced Local Inference:** Verify that the local engine executes a deep context look-up across your database tables, injecting the file text directly into your local **Llama 3.2 3B** prompt template to deliver tailored reasoning rather than basic keyword matching.
 
 ### 4. Performance & UX Verification (30% Weight)
+* **Clean Markdown Parsing:** Confirm that raw LLM output text strings automatically transform into beautifully formatted blocks, presenting major headers, clean paragraphs, and indented list elements clearly.
+* **Inference Latency Metric:** Monitor your active backend console window to verify that the INT4 model quantisation paths are maintaining high tokens-per-second (TPS) execution speeds on standard consumer laptop hardware.
 
-- **Clean Markdown Parsing:** Confirm that raw LLM output text strings automatically transform into beautifully formatted blocks, presenting major headers, clean paragraphs, and indented list elements clearly.
-- **Inference Latency Metric:** Monitor your active backend console window to verify that the INT4 model quantization paths are maintaining high tokens-per-second (TPS) execution speeds on standard consumer laptop hardware.
+````
+
