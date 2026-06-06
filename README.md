@@ -6,7 +6,7 @@ This system was explicitly designed, built, and audited to fulfill the core secu
 
 ---
 
-## 🏗️ Integrated Core Tech Stack
+##  Integrated Core Tech Stack
 
 Our decentralized architecture removes third-party cloud infrastructure entirely, binding all data engineering, vector indexing, and model inference operations directly to local machine components:
 
@@ -19,7 +19,7 @@ Our decentralized architecture removes third-party cloud infrastructure entirely
 
 ---
 
-## 🗺️ Architecture Blueprint
+##  Architecture Blueprint
 
 ```text
 ARMOR/
