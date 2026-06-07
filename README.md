@@ -1,6 +1,6 @@
 # Privacy Shield Hub: Data Intelligence
 
-Privacy Shield Hub is an enterprise grade, local-first desktop intelligence system built from scratch for macOS. This software bridges the gap between high utility artificial intelligence and total data sovereignty by processing sensitive financial ledger files and dense medical archives without a single packet of data leaving the physical hardware container.
+Privacy Shield Hub is an enterprise-grade, local-first desktop intelligence system engineered for cross-platform environments (Windows, macOS, and Linux). This software bridges the gap between high utility artificial intelligence and total data sovereignty by processing sensitive financial ledger files and dense medical archives without a single packet of data leaving the physical hardware container.
 
 This system was explicitly designed, built, and audited to fulfill the core security and engineering constraints outlined in **Track 3 | The Privacy Shield**. It features an intuitive, ultra-modern dashboard interface that operates flawlessly under a zero-connectivity, air-gapped network state.
 
