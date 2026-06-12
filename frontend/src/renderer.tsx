@@ -1,14 +1,15 @@
-import './index.css';
+// src/renderer.tsx
 import React from 'react';
-import { createRoot } from 'react-dom/client';
-import PrivacyHubDashboard from './PrivacyHubDashboard';
-
+import { createRoot } from 'react-dom/client'; // Explicitly grab the root mount engine
+import './index.css'; 
+import PrivacyHubDashboard from './Dashboard';
 const container = document.getElementById('root');
+
 if (container) {
-    const root = createRoot(container);
-    root.render(
-        <React.StrictMode>
-            <PrivacyHubDashboard />
-        </React.StrictMode>
-    );
+  const root = createRoot(container);
+  root.render(
+    <React.StrictMode>
+      <PrivacyHubDashboard />
+    </React.StrictMode>
+  );
 }
