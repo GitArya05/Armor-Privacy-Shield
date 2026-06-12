@@ -2,7 +2,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client'; // Explicitly grab the root mount engine
 import './index.css'; 
-import PrivacyHubDashboard from './Dashboard';
+import PrivacyHubDashboard from './PrivacyHubDashboard';
 const container = document.getElementById('root');
 
 if (container) {
