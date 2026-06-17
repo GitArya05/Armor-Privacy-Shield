@@ -1,4 +1,3 @@
-# backend/processor.py
 import os
 import datetime
 import shutil
@@ -35,6 +34,7 @@ class PrivacyProcessor:
         # Change from "secure_vault_v3" to "secure_vault_v4"
         self.table_name = "secure_vault_v4" 
         log_privacy_event("Local Intelligence Engine Initialized securely.")
+        
     def chunk_text(self, text: str, chunk_size: int = 1000):
         return [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
 

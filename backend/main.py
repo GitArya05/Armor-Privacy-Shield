@@ -1,4 +1,3 @@
-# backend/main.py
 import os
 import shutil
 from fastapi import FastAPI, UploadFile, File, HTTPException
