@@ -17,18 +17,26 @@ function createWindow() {
     }
   });
 
-  // Accesses your static built assets directory smoothly with zero duplicate declarations
-  mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
-}
+// The Vite plugin injects this global variable automatically
+  if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
+    mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+  } else {
+    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
+  }
+}; // <--- THIS is the bracket that closes your createWindow function!
 
 app.whenReady().then(() => {
   createWindow();
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
   });
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+  if (process.platform !== 'darwin') {
+    app.quit();
+  }
 });
